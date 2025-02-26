@@ -10,6 +10,17 @@ export default {
 };
 </script>
 
-<style>
 
+<style>
+/* 🌟 Global Black Background */
+body, html {
+
+  font-family: Sans-serif;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 </style>

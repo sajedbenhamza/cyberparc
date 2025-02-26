@@ -1,59 +1,68 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import User from "../models/User";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import bycript from "bcryptjs";
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    res.status(400).json({ message: "Email and password are required" });
+    return;
+  }
+
   try {
-    // Check if the user already exists
     const existingUser = await User.findOne({ email });
+
     if (existingUser) {
       res.status(400).json({ message: "User already exists" });
       return;
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ email, password });
+    newUser.password = await bycript.hash(password, 10);
+    await newUser.save();
 
-    // Create a new user
-    const user = new User({ email, password: hashedPassword });
-    await user.save();
-
-    // Generate a token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "defaultSecret", {
-      expiresIn: "1h",
-    });
-
-    res.status(201).json({ message: "User created successfully", token });
+    res.status(201).json({ message: "Signup successful" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: (error as Error).message });
+    console.error("❌ Signup error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
-
   if (!email || !password) {
-    return next(new Error("Email and password are required"));
+    res.status(400).json({ message: "Email and password are required" });
+    return;
   }
 
   try {
     const user = await User.findOne({ email });
-
-    if (!user || !(await user.comparePassword(password))) {
-      return next(new Error("Invalid email or password"));
+    if (!user) {
+      res.status(400).json({ message: "User does not exist" });
+      return;
     }
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET || "defaultSecret",
-      { expiresIn: "1h" }
-    );
+    const match = await bycript.compare(password, user.password);
+    if (!match) {
+      res.status(400).json({ message: "Password is wrong" });
+      return;
+    }
 
-    res.status(200).json({ token });
+    if (!process.env.JWT_SECRET) {
+      console.error("❌ Missing JWT_SECRET in environment variables");
+      res.status(500).json({ message: "Server configuration error" });
+      return;
+    }
+
+    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.status(200).json({ email: user.email, token: token });
   } catch (error) {
-    next(error); // This passes errors to `errorHandler.js`
+    console.error("❌ Login error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

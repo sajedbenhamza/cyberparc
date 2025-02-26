@@ -2,7 +2,6 @@
     <div>
       <HeaderPage />
       <main>
-        <h1>Admin Dashboard</h1>
         <AdminDashboard />
       </main>
       <FooterPage />

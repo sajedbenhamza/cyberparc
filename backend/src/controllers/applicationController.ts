@@ -1,19 +1,26 @@
 import { Request, Response, NextFunction } from "express";
 import InternshipApplication from "../models/InternshipApplication";
-
+import { ObjectId } from "mongodb";
 // Create a new application
 export const createApplication = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const { name, email, cvLink } = req.body;
-
+  const { _id, name, email, cvLink, status } = req.body;
   try {
-    const application = new InternshipApplication({ name, email, cvLink });
+    const application = new InternshipApplication({
+      _id: new ObjectId(_id),
+      name,
+      email,
+      cvLink,
+      status,
+    });
     await application.save();
 
-    res.status(201).json({ message: "Application submitted successfully" });
+    res
+      .status(201)
+      .json({ message: "Application submitted successfully", application: application });
   } catch (error) {
     next(error); // Pass the error to the error handler
   }
@@ -34,32 +41,49 @@ export const getAllApplications = async (
 };
 
 // Update application status (Admin only)
-interface AppError extends Error {
-  statusCode?: number;
-}
 
 export const updateApplicationStatus = async (
-  req: Request<{ id: string }>,
+  req: Request<{ _id: string }>,
   res: Response,
-
   next: NextFunction
 ): Promise<void> => {
-  const { id } = req.params;
+  const { _id } = req.params;
   const { status } = req.body;
 
   try {
-    const application = await InternshipApplication.findById(id);
+    console.log(_id);
+    const application = await InternshipApplication.findOne({ _id: new ObjectId(_id) });
 
-    if (!application) {
-      const error = new Error("Application not found") as AppError;
-      error.statusCode = 404; // Assign statusCode
-      return next(error); // Pass the error to the centralized error handler
-    }
+    console.log(application);
 
     application.status = status;
+    console.log(application);
     await application.save();
 
     res.status(200).json({ message: "Application status updated successfully" });
+  } catch (error) {
+    next(error); // Pass unexpected errors to the centralized error handler
+  }
+};
+
+export const deleteApplication = async (
+  req: Request<{ _id: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const { _id } = req.params;
+
+  try {
+    const application = await InternshipApplication.findOneAndDelete({ _id: new ObjectId(_id) });
+
+    if (!application) {
+      res.status(404).json({ message: "Application not found" });
+      return;
+    }
+
+    res.status(200).json({ message: "Application deleted successfully" });
+
+    res.status(200).json({ message: "Application Deleted Successfully" });
   } catch (error) {
     next(error); // Pass unexpected errors to the centralized error handler
   }

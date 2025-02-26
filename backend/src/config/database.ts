@@ -9,6 +9,8 @@ const connectDB = async () => {
   try {
     await mongoose.connect(MONGO_URI, {
       dbName: "users", // Ensure your database name is correct
+      user: process.env.MONGO_USER, // Optional (only for advanced users)
+      pass: process.env.MONGO_PASS, // Optional (only for advanced users)
     });
 
     console.log("✅ MongoDB Atlas Connected Successfully");

@@ -9,6 +9,7 @@ export interface IInternshipApplication extends Document {
 
 const InternshipApplicationSchema: Schema<IInternshipApplication> = new mongoose.Schema(
   {
+    _id: { type: mongoose.Schema.Types.ObjectId, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true },
     cvLink: { type: String, required: true },

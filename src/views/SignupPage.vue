@@ -2,7 +2,6 @@
     <div>
       <HeaderPage />
       <main>
-        <h1>Signup</h1>
         <SignupForm />
       </main>
       <FooterPage />

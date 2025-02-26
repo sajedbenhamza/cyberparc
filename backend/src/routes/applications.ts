@@ -3,8 +3,9 @@ import {
   createApplication,
   getAllApplications,
   updateApplicationStatus,
+  deleteApplication,
 } from "../controllers/applicationController";
-import { authenticate, isAdmin } from "../middleware/auth";
+import { authenticate } from "../middleware/auth";
 
 const router = Router();
 
@@ -12,9 +13,9 @@ const router = Router();
 router.post("/", createApplication);
 
 // Get all applications (Admin only)
-router.get("/", authenticate, isAdmin, getAllApplications);
+router.get("/", authenticate, getAllApplications);
 
 // Update application status (Admin only)
-router.patch("/:id", authenticate, isAdmin, updateApplicationStatus);
-
+router.patch("/:_id", authenticate, updateApplicationStatus);
+router.delete("/:_id", deleteApplication);
 export default router;

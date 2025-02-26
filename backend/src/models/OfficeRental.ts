@@ -10,6 +10,7 @@ export interface IOfficeRental extends Document {
 
 const OfficeRentalSchema: Schema<IOfficeRental> = new mongoose.Schema(
   {
+    _id: { type: mongoose.Schema.Types.ObjectId, required: true },
     name: {
       type: String,
       required: true,
